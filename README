@@ -1,0 +1,31 @@
+Parts and manufacturing status webapp.  This was made to meet the needs of FIRST Robotics Competition team 1425.  It attempts to keep track of and plan building of parts and assembly across machines and meetings.  
+
+The major changes from version 1 are:
+1) The system keeps track of designs seperately from specific examples
+2) More easily configurable sets of machines and manufacturing steps
+3) Ability to upload drawings, G-code, or other supplimental data.
+
+INSTALLATION
+
+This is a rough outline:
+
+1) Prerequesites: make, g++-10, apache, mariadb
+2) Compile by typing "make".  This should create a binary named "db".
+3) Set up apache to enable cgi
+4) Copy the binary named "db" into the cgi directory set up in step 3.
+5) Set up mariadb and create an empty database in it.  
+6) Create a file named "auth.json" that tells the program how to access the database.  Its contents should look something like this:
+
+{
+        "host":"address_of_database_server",
+        "user":"example_database_user_name",
+        "database":"example_database_name",
+        "password":"example_password"
+}
+
+MIGRATION
+
+If you have data from version 1:
+
+1) Create a file named "auth_old.json" in the same format as "auth.json" except with the old database.  
+2) Run "./db --migrate".

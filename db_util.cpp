@@ -1,10 +1,27 @@
 #include "db_util.h"
 #include<map>
 #include "util.h"
+#include "map_util.h"
+#include "set_util.h"
 
 using namespace std;
 
+struct Dup{
+	multiset<string> m;
+
+	void add(string s){
+		m|=s;
+	}
+
+	~Dup(){
+		//print_lines(sorted(swap_pairs(to_vec(count(m)))));
+	}
+};
+
+//Dup dup;
+
 void run_cmd(DB db,std::string const& cmd){
+	//dup.add(cmd);
 	auto q=mysql_query(db,cmd.c_str());
 	if(q){
 		std::cout<<"Mysql fail:"<<mysql_error(db)<<"\n";
@@ -14,12 +31,28 @@ void run_cmd(DB db,std::string const& cmd){
 	}
 }
 
+struct Count{
+	map<int,int> used;
+
+	~Count(){
+		PRINT(used);
+	}
+
+	void add(int x){
+		used[x]++;
+	}
+};
+
+//Count countq;
+
 std::vector<std::vector<std::optional<std::string>>> query(DB db,std::string const& query){
 	//this is obviously not the fastest way to do this.
 	run_cmd(db,query);
 	MYSQL_RES *result=mysql_store_result(db);
 	if(result==NULL)nyi
 	int fields=mysql_num_fields(result);
+	//countq.add(fields);
+	//dup.add(query);
 	//PRINT(fields);
 	MYSQL_ROW row;
 	std::vector<std::vector<std::optional<std::string>>> r;

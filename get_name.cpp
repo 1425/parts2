@@ -103,10 +103,15 @@ string get_name(DB db,Meeting_id id,bool b){
 }
 
 string get_name(DB db,Manufacture_step_id id,bool b){
-	auto q=query_to<Part_design_id,optional<Machine_id>>(db,
+	/*auto q=query_to<Part_design_id,optional<Machine_id>>(db,
 		"SELECT part_design,machine FROM manufacture_step_info "
 		"WHERE main="+escape(id)+
 		" ORDER BY id DESC LIMIT 1"
+	);*/
+	auto q=query_to<Part_design_id,optional<Machine_id>>(
+		db,
+		"SELECT part_design,machine FROM manufacture_step_current "
+		"WHERE main="+escape(id)
 	);
 	if(q.size()){
 		auto row=q[0];
@@ -167,7 +172,7 @@ string get_name(DB db,Assembly_id a,bool show_table){
 	return no_data(a);
 }
 
-string get_name(DB db,Part_design_id id,bool show_table){
+string get_name_inner(DB db,Part_design_id id,bool show_table){
 	auto q=query_to<string,string>(
 		db,
 		"SELECT part_number,name"+current(Id_table{"part_design"})+" AND main="+escape(id)
@@ -183,16 +188,33 @@ string get_name(DB db,Part_design_id id,bool show_table){
 	return "(deleted)";
 }
 
-string get_name_none(DB db,Id_table const& table,int main,bool show_table){
+string get_name(DB db,Part_design_id id,bool show_table){
+	static map<pair<Part_design_id,bool>,string> cache;
+	auto k=make_pair(id,show_table);
+	auto f=cache.find(k);
+	if(f!=cache.end()){
+		return f->second;
+	}
+	auto r=get_name_inner(db,id,show_table);
+	cache[k]=r;
+	return r;
+}
+
+string get_name_none_inner(DB db,Id_table const& table,int main,bool show_table){
 	auto e=expected_tables();
 	auto this_table=e[Table_name{table+"_info"}];
 	const auto no_data=table+" #"+as_string(main);
 	for(auto [name,type]:this_table){
 		if(name=="name"){
-			auto q=query_to<optional<string>>(db,
+			/*auto q=query_to<optional<string>>(db,
 				"SELECT name FROM "+table+"_info "
 				"WHERE main="+as_string(main)+" AND valid "
 				"ORDER BY id DESC LIMIT 1"
+			);*/
+			auto q=query_to<optional<string>>(
+				db,
+				"SELECT name FROM "+table+"_current "
+				"WHERE main="+as_string(main)
 			);
 			if(q.empty()){
 				//you get here if it seems like the thing has never existed
@@ -208,6 +230,22 @@ string get_name_none(DB db,Id_table const& table,int main,bool show_table){
 		}
 	}
 	return no_data;
+}
+
+string get_name_none(DB db,Id_table const& table,int main,bool show_table){
+	using K=tuple<Id_table,int,bool>;
+	auto k=make_tuple(table,main,show_table);
+
+	static map<K,string> cache;
+	{
+		auto f=cache.find(k);
+		if(f!=cache.end()){
+			return f->second;
+		}
+	}
+	auto s=get_name_none_inner(db,table,main,show_table);
+	cache[k]=s;
+	return s;
 }
 
 template<typename T>

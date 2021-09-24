@@ -399,6 +399,32 @@ DB_connection connect_db(string const& auth_filename){
 	if(!r){
 		throw "Could not connect to database";
 	}
+
+	//eventually, this should go somewhere else so doesn't do this every time
+	//and also need to have it at adjustable timeframe
+	//and even if needed to retain it here would be able to drop some of the columns like 'valid'
+	//#define X(A,B,C) run_cmd(db.db,"CREATE TEMPORARY TABLE "#A "_current SELECT * FROM "#A"_info WHERE valid AND id IN (SELECT max(id) FROM "#A"_info GROUP BY main)");
+
+	/*auto f=[&](string name){
+		run_cmd(
+			db.db,
+			"CREATE TEMPORARY TABLE "+name+"_current SELECT * FROM "+name+"_info WHERE valid AND id IN (SELECT max(id) FROM "+name+"_info GROUP BY main)"
+			" PRIMARY KEY (main)"
+		);
+	};*/
+
+	/*#define X(A,B,C) run_cmd(\
+		db.db,\
+		"CREATE TEMPORARY TABLE "#A "_current SELECT * FROM "#A"_info WHERE valid AND id IN (SELECT max(id) FROM "#A"_info GROUP BY main)"\
+		" PRIMARY KEY main"\
+	);*/
+	#define X(A,B,C) run_cmd(\
+		db.db,\
+		"CREATE TEMPORARY TABLE "#A "_current SELECT * FROM "#A"_info WHERE valid AND id IN (SELECT max(id) FROM "#A"_info GROUP BY main)"\
+	); run_cmd(db.db,"ALTER TABLE "#A"_current ADD CONSTRAINT f PRIMARY KEY (main)");
+	TABLES(X)
+	#undef X
+
 	return db;
 }
 

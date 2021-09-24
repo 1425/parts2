@@ -16,7 +16,7 @@ DEPS:=\
 	export.o type.o
 
 db: db.h $(DEPS)
-	$(CXX) $(DEPS) $(LDFLAGS) -o db
+	$(CXX) $(DEPS) $(CXXFLAGS) $(LDFLAGS) -o db
 
 all: run install
 

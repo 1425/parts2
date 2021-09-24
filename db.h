@@ -460,34 +460,79 @@ std::optional<T> get_item(std::optional<T> const*,std::optional<std::string> con
 }
 
 template<typename T>
+T get_item(T const* t,char *s,unsigned len){
+	assert(s);
+	return parse(t,std::string(s,s+len));
+}
+
+template<typename T>
+std::optional<T> get_item(std::optional<T> const* t,char *s,unsigned len){
+	if(!s) return std::nullopt;
+	return parse(t,std::string(s,s+len));
+}
+
+template<typename T>
+std::optional<T> null_item(std::optional<T> const*){
+	return std::optional<T>{std::nullopt};
+}
+
+template<typename T>
+T null_item(T const*){
+	assert(0);
+}
+
+template<typename T>
 std::vector<T> query_to(DB db,std::string const& query_string){
-	auto q=query(db,query_string);
-	return mapf(
-		[&](auto const& row){
-			if(row.size()!=1){
-				PRINT(query_string);
-				PRINT(row);
-			}
-			assert(row.size()==1);
-			return get_item((T*)0,row[0]);
-		},
-		q
-	);
+	run_cmd(db,query_string);
+	MYSQL_RES *result=mysql_store_result(db);
+	if(result==NULL)nyi
+
+	int fields=mysql_num_fields(result);
+	assert(fields==1);
+
+	MYSQL_ROW row;
+	std::vector<T> r;
+	while((row=mysql_fetch_row(result))){
+		unsigned long *lengths = mysql_fetch_lengths(result);
+		assert(lengths);
+		//The reason to ask for all the lengths is so that when there is binary data
+		//This you get all the data instread of just having it get truncated on the first null character.
+		//assert(row[0]);
+		if(row[0]){
+			r|=get_item((T*)0,row[0],lengths[0]);
+		}else{
+			r|=null_item((T*)0);
+		}
+	}
+	mysql_free_result(result);
+	return r;
 }
 
 template<typename A,typename B>
 std::vector<std::pair<A,B>> query_to(DB db,std::string const& s){
-	auto q=query(db,s);
-	return mapf(
-		[=](auto row){
-			assert(row.size()==2);
-			return std::make_pair(
-				get_item((A*)0,row[0]),
-				get_item((B*)0,row[1])
-			);
-		},
-		q
-	);
+	run_cmd(db,s);
+
+	MYSQL_RES *result=mysql_store_result(db);
+	assert(result);
+
+	int fields=mysql_num_fields(result);
+	assert(fields==2);
+
+	MYSQL_ROW row;
+	std::vector<std::pair<A,B>> r;
+	while((row=mysql_fetch_row(result))){
+		unsigned long*lengths=mysql_fetch_lengths(result);
+		assert(lengths);
+		auto get=[&](auto type,int i){
+			if(row[i]){
+				return get_item(type,std::string(row[i],row[i]+lengths[i]));
+			}
+			return null_item(type);
+		};
+		r|=std::make_pair(get((A*)0,0),get((B*)0,1));
+	}
+	mysql_free_result(result);
+	return r;
 }
 
 template<typename A,typename B,typename C>
@@ -507,7 +552,30 @@ std::vector<std::tuple<A,B,C>> query_to(DB db,std::string const& s){
 
 template<typename A,typename B,typename C,typename D>
 std::vector<std::tuple<A,B,C,D>> query_to(DB db,std::string const& s){
-	return mapf(
+	run_cmd(db,s);
+	MYSQL_RES *result=mysql_store_result(db);
+	assert(result);
+	int fields=mysql_num_fields(result);
+	assert(fields==4);
+	MYSQL_ROW row;
+	std::vector<std::tuple<A,B,C,D>> r;
+	while((row=mysql_fetch_row(result))){
+		unsigned long *lengths=mysql_fetch_lengths(result);
+		assert(lengths);
+		auto get=[&](auto type,int i){
+			if(row[i]) return get_item(type,std::string(row[i],row[i]+lengths[i]));
+			return null_item(type);
+		};
+		r|=std::make_tuple(
+			get((A*)0,0),
+			get((B*)0,1),
+			get((C*)0,2),
+			get((D*)0,3)
+		);
+	}
+	mysql_free_result(result);
+	return r;
+	/*return mapf(
 		[](auto row){
 			assert(row.size()==4);
 			return std::make_tuple(
@@ -518,7 +586,7 @@ std::vector<std::tuple<A,B,C,D>> query_to(DB db,std::string const& s){
 			);
 		},
 		query(db,s)
-	);
+	);*/
 }
 
 template<typename A,typename B,typename C,typename D,typename E>

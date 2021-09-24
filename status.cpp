@@ -317,11 +317,12 @@ vector<Manufacture_step_id> manufacture_step_ids(DB db,Part_design_id a){
 optional<Stock_id> stock(DB db,Part_design_id id){
 	auto q=query_to<optional<Stock_id>>(
 		db,
-		"SELECT stock FROM part_design_info WHERE "
+		/*"SELECT stock FROM part_design_info WHERE "
 		"(id) IN ("
 			"SELECT MAX(id) FROM part_design_info "
 			"WHERE main="+as_string(id.data)
-		+") AND valid AND stock IS NOT NULL"
+		+") AND valid AND stock IS NOT NULL"*/
+		"SELECT stock FROM part_design_current WHERE main="+as_string(id.data)
 	);
 	if(q.empty()) return std::nullopt;
 	assert(q.size()==1);
@@ -685,7 +686,8 @@ string recent(string table){
 }
 
 string current(Id_table const& table){
-	return " FROM "+table+"_info WHERE "+recent(table+"_info")+" AND valid ";
+	return " FROM "+table+"_current WHERE 1 ";
+	//return " FROM "+table+"_info WHERE "+recent(table+"_info")+" AND valid ";
 }
 
 std::vector<Assembly_design_id> asm_order(DB db){

@@ -6,7 +6,7 @@
 
 using namespace std;
 
-struct Dup{
+/*struct Dup{
 	multiset<string> m;
 
 	void add(string s){
@@ -14,11 +14,11 @@ struct Dup{
 	}
 
 	~Dup(){
-		//print_lines(sorted(swap_pairs(to_vec(count(m)))));
+		print_lines(sorted(swap_pairs(to_vec(count(m)))));
 	}
 };
 
-//Dup dup;
+Dup dup;*/
 
 void run_cmd(DB db,std::string const& cmd){
 	//dup.add(cmd);

@@ -235,9 +235,9 @@ string parse(string const*,std::optional<string> const& a){
 	return *a;
 }
 
-int parse(int const*,std::optional<string> const& a){
+int parse(int const*,std::optional<string_view> const& a){
 	assert(a);
-	return stoi(*a);
+	return atoi(a->data());
 }
 
 std::map<Stock_id,std::string> stock_types(DB db){
@@ -253,7 +253,7 @@ std::optional<Assembly_state> parse(Assembly_state const*,std::optional<int> con
 
 Assembly_state parse(Assembly_state const *a,std::optional<std::string> const& s){
 	assert(s);
-	return parse(a,*s);
+	return parse(a,std::string_view{*s});
 }
 
 #define X(A,B) void show(std::ostream&,DB,A const&);

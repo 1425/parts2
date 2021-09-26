@@ -624,6 +624,11 @@ Id new_item(DB db,Table_name const& table){
 	return query_single<unsigned>(db,"SELECT LAST_INSERT_ID()");
 }
 
+std::optional<std::string> parse(
+	std::optional<std::string> const*,
+	std::string_view
+);
+
 Column_value parse_col(Typename const& type,std::string const& value){
 	#define X(NAME) if(type==""#NAME){\
 		NAME p=parse((NAME*)0,value);\
@@ -731,9 +736,9 @@ Table_name rand(Table_name const*){
 	return Table_name{choose(table_names())};
 }
 
-Table_name parse(Table_name const*,std::optional<std::string> const& a){
+Table_name parse(Table_name const*,std::optional<std::string_view> const& a){
 	assert(a);
-	return Table_name{*a};
+	return Table_name{string{*a}};
 }
 
 Id_table::Id_table(std::string a):data(std::move(a)){

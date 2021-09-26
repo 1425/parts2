@@ -206,7 +206,7 @@ Assembly_state adjust_state(std::optional<std::string> const& a){
 		return Assembly_state::done;
 	}
 	try{
-		return parse((Assembly_state*)0,*a);
+		return parse((Assembly_state*)0,std::string_view{*a});
 	}catch(...){
 		nyi
 	}

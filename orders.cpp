@@ -113,7 +113,14 @@ set<Availability_id> availability(DB db,Stock_category_id a){
 }
 
 auto category(DB db,Stock_id a){
-	return query_optional<Stock_category_id>(db,"SELECT category"+current(a));
+	static map<Stock_id,optional<Stock_category_id>> cache;
+	auto f=cache.find(a);
+	if(f!=cache.end()){
+		return f->second;
+	}
+	auto v=query_optional<Stock_category_id>(db,"SELECT category"+current(a));
+	cache[a]=v;
+	return v;
 }
 
 Dimensions dimensions(DB db,Stock_category_id a){

@@ -7,11 +7,11 @@
 #include "util.h"
 #include "db_util.h"
 
-std::string parse(const std::string*,std::string const&);
-bool parse(const bool*,std::string const&);
-unsigned parse(const unsigned*,std::string const&);
-float parse(const float*,std::string const&);
-double parse(const double*,std::string const&);
+std::string parse(const std::string*,std::string_view const&);
+bool parse(const bool*,std::string_view const&);
+unsigned parse(const unsigned*,std::string_view const&);
+float parse(const float*,std::string_view const&);
+double parse(const double*,std::string_view const&);
 
 std::string to_db_type(const bool*);
 
@@ -41,7 +41,7 @@ std::string to_db_type(Defaulted<T,VALUE> const*){
 }
 
 template<typename T,T VALUE>
-Defaulted<T,VALUE> parse(Defaulted<T,VALUE> const*,std::string const& s){
+Defaulted<T,VALUE> parse(Defaulted<T,VALUE> const*,std::string_view const& s){
 	return Defaulted<T,VALUE>{parse((T*)0,s)};
 }
 
@@ -59,7 +59,7 @@ std::ostream& operator<<(std::ostream&,Nonempty_string const&);
 bool operator<(Nonempty_string const&,Nonempty_string const&);
 Nonempty_string rand(Nonempty_string const*);
 std::string to_db_type(Nonempty_string const*);
-Nonempty_string parse(Nonempty_string const*,std::string const&);
+Nonempty_string parse(Nonempty_string const*,std::string_view const&);
 std::string escape(Nonempty_string const&);
 Nonempty_string operator+(std::string const&,Nonempty_string const&);
 Nonempty_string operator+(Nonempty_string const&,std::string const&);
@@ -80,7 +80,7 @@ std::string to_db_type(bool const*);
 std::string escape(std::string const&);
 
 std::string escape(int);
-int parse(const int*,std::string const&);
+int parse(const int*,std::string_view const&);
 std::string to_db_type(const int*);
 std::string to_db_type(const int unsigned*);
 int rand(const int*);
@@ -89,7 +89,7 @@ using Decimal=std::decimal::decimal32;
 
 std::ostream& operator<<(std::ostream&,Decimal const&);
 Decimal rand(const Decimal*);
-Decimal parse(const Decimal*,std::string const&);
+Decimal parse(const Decimal*,std::string_view const&);
 std::string to_db_type(Decimal const *);
 Input show_input(DB db,std::string const& name,Decimal value);
 std::string escape(Decimal);
@@ -104,7 +104,7 @@ class Positive_decimal{
 std::ostream& operator<<(std::ostream&,Positive_decimal const&);
 Positive_decimal rand(Positive_decimal const*);
 std::string to_db_type(Positive_decimal const*);
-Positive_decimal parse(Positive_decimal const*,std::string const&);
+Positive_decimal parse(Positive_decimal const*,std::string_view const&);
 bool operator<(Positive_decimal,Positive_decimal);
 bool operator>=(Positive_decimal,Positive_decimal);
 std::string escape(Positive_decimal);
@@ -172,7 +172,7 @@ Sub rand(const Wrap<Sub,Data>*){
 }
 
 template<typename Sub,typename Data>
-Sub parse(const Wrap<Sub,Data>*,std::string const& s){
+Sub parse(const Wrap<Sub,Data>*,std::string_view const& s){
 	return Sub{parse((Data*)0,s)};
 }
 
@@ -248,8 +248,8 @@ std::string to_db_type(Int_limited<MIN,MAX> const*){
 }
 
 template<int MIN,int MAX>
-Int_limited<MIN,MAX> parse(Int_limited<MIN,MAX> const*,std::string const& s){
-	return Int_limited<MIN,MAX>(stoi(s));
+Int_limited<MIN,MAX> parse(Int_limited<MIN,MAX> const*,std::string_view const& s){
+	return Int_limited<MIN,MAX>(atoi(s.data()));
 }
 
 template<int MIN,int MAX>
@@ -268,7 +268,7 @@ using Day=Int_limited<1,31>;
 struct Date{
 	DATE_ITEMS(INST)
 };
-Date parse(Date const*,std::string const&);
+Date parse(Date const*,std::string_view const&);
 Input show_input(DB db,std::string const& name,Date const& current);
 Input show_input(DB db,std::string const& name,Date const*);
 std::string to_db_type(const Date*);
@@ -310,7 +310,7 @@ NO_ADD(Part_id)*/
 	std::ostream& operator<<(std::ostream&,NAME const&);\
 	std::vector<NAME> options(const NAME*);\
 	NAME rand(const NAME* a);\
-	NAME parse(const NAME*,std::string const&);\
+	NAME parse(const NAME*,std::string_view const&);\
 	Input show_input(DB db,std::string const& name,NAME const& value);\
 	std::string escape(NAME const&);\
 	std::string to_db_type(const NAME*);\
@@ -395,9 +395,9 @@ std::string to_db_type(const Suggest<T>*){
 }
 
 template<typename T>
-T parse(const Suggest<T>*,std::string s){
+T parse(const Suggest<T>*,std::string_view s){
 	T r;
-	r.s=move(s);
+	r.s=s;
 	return r;
 }
 
@@ -457,7 +457,7 @@ std::string escape(std::optional<T> const& a){
 }
 
 struct Dummy{};
-Dummy parse(const Dummy*,std::string const&);
+Dummy parse(const Dummy*,std::string_view const&);
 std::ostream& operator<<(std::ostream&,Dummy);
 
 class Subsystem_prefix{
@@ -470,7 +470,7 @@ class Subsystem_prefix{
 	std::string get()const;	
 };
 std::string to_db_type(const Subsystem_prefix*);
-Subsystem_prefix parse(Subsystem_prefix const*,std::string const&);
+Subsystem_prefix parse(Subsystem_prefix const*,std::string_view const&);
 Input show_input(DB,std::string const&,Subsystem_prefix const&);
 std::string escape(Subsystem_prefix const&);
 bool operator==(Subsystem_prefix const&,Subsystem_prefix const&);
@@ -512,7 +512,7 @@ std::string escape(Part_number_local const&);
 Part_number_local next(Part_number_local);
 Part_number_local rand(Part_number_local const*);
 std::string to_db_type(Part_number_local const*);
-Part_number_local parse(Part_number_local const*,std::string const&);
+Part_number_local parse(Part_number_local const*,std::string_view const&);
 
 /*struct Part_checkbox:Wrap<Part_checkbox,Part_id>{};
 Input show_input(DB,std::string const&,Part_checkbox const&);
@@ -552,14 +552,14 @@ std::ostream& operator<<(std::ostream&,Upload_data const&);
 bool operator<(Upload_data const&,Upload_data const&);
 Upload_data rand(Upload_data const*);
 std::string to_db_type(Upload_data const*);
-Upload_data parse(Upload_data const*,std::string const&);
+Upload_data parse(Upload_data const*,std::string_view const&);
 std::string escape(Upload_data const&);
 std::string sql_escape(DB,Upload_data const&);
 
 using Positive_int=Int_limited<1,1000>;
 std::string escape(Positive_int);
 std::string sql_escape(DB,Positive_int);
-Positive_int parse(Positive_int const*,std::string const&);
+Positive_int parse(Positive_int const*,std::string_view const&);
 std::string to_db_type(Positive_int const*);
 
 #endif

@@ -7,6 +7,11 @@
 #include "util.h"
 #include "cgicc/Cgicc.h"
 
+template<typename T>
+T parse(T const* t,std::string const& s){
+	return parse(t,std::string_view(s));
+}
+
 #define ID_TABLE(X)\
 	struct X##_id:Wrap<X##_id,Id>{};\
 	std::ostream& operator<<(std::ostream&,X##_id const&);\
@@ -296,7 +301,7 @@ std::string operator+(Table_name const&,char const*);
 bool operator==(Table_name const&,const char*);
 bool operator<(Table_name const&,Table_name const&);
 Table_name rand(Table_name const*);
-Table_name parse(Table_name const*,std::optional<std::string> const&);
+Table_name parse(Table_name const*,std::optional<std::string_view> const&);
 
 class Id_table{
 	std::string data;
@@ -330,10 +335,10 @@ std::string operator+(const char*,Typename const&);
 using Table_types=std::vector<std::pair<Column_name,Typename>>;
 std::map<Id_table,Table_types> table_types();
 
-int parse(int const*,std::optional<std::string> const&);
-std::string parse(std::string const*,std::optional<std::string> const&);
+int parse(int const*,std::optional<std::string_view> const&);
+std::string parse(std::string const*,std::optional<std::string_view> const&);
 std::optional<Assembly_state> parse(Assembly_state const*,std::optional<int> const&);
-Assembly_state parse(Assembly_state const*,std::optional<std::string> const&);
+Assembly_state parse(Assembly_state const*,std::optional<std::string_view> const&);
 
 #define IDS(A,B,C) X(B##_id)
 
@@ -450,19 +455,29 @@ std::vector<std::string> const& table_names();
 template<typename T>
 T get_item(T const* t,std::optional<std::string> a){
 	assert(a);
-	return parse(t,*a);
+	return parse(t,std::string_view{*a});
+}
+
+template<typename T>
+T get_item(T const*,std::optional<std::string_view>){
+	nyi
+}
+
+template<typename T>
+T get_item(T const* t,std::string const& s){
+	return parse(t,s);
 }
 
 template<typename T>
 std::optional<T> get_item(std::optional<T> const*,std::optional<std::string> const& a){
 	if(!a) return std::nullopt;
-	return parse((T*)0,*a);
+	return parse((T*)0,std::string_view{*a});
 }
 
 template<typename T>
 T get_item(T const* t,char *s,unsigned len){
 	assert(s);
-	return parse(t,std::string(s,s+len));
+	return parse(t,std::string_view(s,s+len));
 }
 
 template<typename T>

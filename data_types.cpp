@@ -6,12 +6,18 @@
 
 using namespace std;
 
+string operator+(const char *a,std::string_view b){
+	return string{a}+string{b};
+}
+
+string operator+(std::string,std::string_view)nyi
+
 std::ostream& operator<<(std::ostream& o,Out_of_range const& a){
 	return o<<"Out_of_range("<<a.min<<" "<<a.max<<" "<<a.value<<")";
 }
 
-std::string parse(std::string const*,std::string const& a){
-	return a;
+std::string parse(std::string const*,std::string_view const& a){
+	return string{a};
 }
 
 string to_db_type(const bool*){ return "tinyint(1)"; }
@@ -45,8 +51,13 @@ Input show_input(DB db,std::string const& name,Part_number const& current){
 
 int rand(const int*){ return rand()%100; }
 
-int parse(const int*,string const& s){ return stoi(s); }
-unsigned int parse(const unsigned int*,string const& s){ return stoi(s); }
+int parse(const int*,string_view const& s){
+	return atoi(s.data());
+}
+
+unsigned int parse(const unsigned int*,string_view const& s){
+	return atoi(s.data());
+}
 
 Input with_suggestions(string const& name,string const& value,vector<string> const& suggestions){
 	stringstream ss;
@@ -166,8 +177,8 @@ Date operator+(Date orig,unsigned offset){
 	};
 }
 
-Date parse(Date const*,std::string const& s){
-	auto sp=split('-',s);
+Date parse(Date const*,std::string_view const& s){
+	auto sp=split('-',string{s});
 	if(sp.size()!=3) throw "Invalid date:"+s;
 	return Date{
 		parse((Year*)0,sp[0]),
@@ -305,7 +316,7 @@ Input show_input(DB db,string const& name,URL const& value){
 	NAME rand(const NAME* a){\
 		return choose(options(a));\
 	}\
-	NAME parse(const NAME*,string const& s){\
+	NAME parse(const NAME*,string_view const& s){\
 		OPTIONS(E_PARSE)\
 		throw std::invalid_argument{""#NAME+string()+": "+s};\
 	}\
@@ -400,12 +411,13 @@ std::ostream& operator<<(std::ostream& o,Decimal const& a){
 
 Decimal rand(const Decimal*){ return (rand()%1000)/100; }
 
-Decimal parse(const Decimal*,string const& s1){
+Decimal parse(const Decimal*,string_view const& s1){
 	bool negative=0;
 	string s;
 	if(s1.size() && s1[0]=='-'){
 		negative=1;
-		s=s1.c_str()+1;
+		//s=s1.c_str()+1;
+		s=string_view{s1.data()+1,s1.size()-1};
 	}else{
 		s=s1;
 	}
@@ -514,7 +526,7 @@ std::string escape(Subsystem_prefix const& a){
 	return escape(a.get());
 }
 
-Subsystem_prefix parse(Subsystem_prefix const*,std::string const& s){
+Subsystem_prefix parse(Subsystem_prefix const*,std::string_view const& s){
 	if(s.size()!=2) throw "Bad prefix length";
 	if(s[0]<'A' || s[1]>'Z') throw "Invalid char1";
 	if(s[1]<'A' || s[1]>'Z') throw "Invalid char2";
@@ -604,8 +616,8 @@ string to_db_type(Part_number_local const*){
 	return to_db_type((string*)0);
 }
 
-Part_number_local parse(Part_number_local const*,string const& s){
-	return Part_number_local{s};
+Part_number_local parse(Part_number_local const*,string_view const& s){
+	return Part_number_local{string{s}};
 }
 
 Three_digit::Three_digit():value(0){}
@@ -634,7 +646,7 @@ Three_digit rand(Three_digit const*){
 	return Three_digit{rand()%1000};
 }
 
-bool parse(const bool*,string const& s){
+bool parse(const bool*,string_view const& s){
         //This is how the database keeps track of it
         if(s=="1") return 1;
         if(s=="0") return 0;
@@ -662,8 +674,8 @@ bool operator<(Upload_data const& a,Upload_data const& b){
 	return a.inner<b.inner;
 }
 
-Upload_data parse(Upload_data const*,std::string const& s){
-	return Upload_data{s};
+Upload_data parse(Upload_data const*,std::string_view const& s){
+	return Upload_data{string{s}};
 }
 
 std::string to_db_type(Upload_data const*){
@@ -711,8 +723,8 @@ string to_db_type(Nonempty_string const*){
 	return to_db_type((string*)0);
 }
 
-Nonempty_string parse(Nonempty_string const*,string const& s){
-	return Nonempty_string(s);
+Nonempty_string parse(Nonempty_string const*,string_view const& s){
+	return Nonempty_string(string{s});
 }
 
 string escape(Nonempty_string const& a){
@@ -773,7 +785,7 @@ std::string to_db_type(Positive_decimal const*){
 	return to_db_type((Decimal*)0);
 }
 
-Positive_decimal parse(Positive_decimal const*,std::string const& s){
+Positive_decimal parse(Positive_decimal const*,std::string_view const& s){
 	return Positive_decimal{parse((Decimal*)0,s)};
 }
 
@@ -785,8 +797,8 @@ std::string escape(Positive_int a){
 	return as_string(a);
 }
 
-Positive_int parse(Positive_int const*,std::string const& s){
-	return Positive_int(stoi(s));
+Positive_int parse(Positive_int const*,std::string_view const& s){
+	return Positive_int(atoi(s.data()));
 }
 
 string to_db_type(Positive_int const*){

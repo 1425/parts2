@@ -4,7 +4,7 @@ LDFLAGS=`mariadb_config --cflags --libs` -lmariadbclient -lcgicc
 INSTALL_DIR ?= /home/eric/code/cgi-bin/
 
 DEPS:=\
-	migrate.o parting.o parting2d.o \
+	dedup.o migrate.o parting.o parting2d.o \
 	stock.o parting3d.o db_util.o \
 	insert.o get_name.o vars.o \
 	orders.o search.o input.o \

@@ -10,6 +10,8 @@ using Row_id=std::variant<
 	bool //this option is not intended to actully be used and is here for syntax reasons
 >;
 
+Id_table table(Row_id);
+
 std::string input_form(DB,Column_name const&,Column_value const&,Row_id);
 std::string input_form(DB,std::string const&,Typename const&);
 std::string input_form(DB,std::string const&,Column_value const&);

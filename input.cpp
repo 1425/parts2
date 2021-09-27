@@ -783,3 +783,10 @@ string input_form(DB db,string const& name,Typename const& type){
 	PRINT(type)
 	nyi
 }
+
+Id_table table(Row_id a){
+        #define X(A,B,C) if(holds_alternative<B##_id>(a)) return Id_table{""#A};
+        TABLES(X)
+        #undef X
+        assert(0);
+}

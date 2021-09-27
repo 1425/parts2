@@ -651,11 +651,13 @@ void drop_test_data(DB db,Id_table const& a){
 	run_cmd(db,"DELETE FROM "+a+"_info WHERE edit_user='no_user'");
 }
 
-std::set<std::string> options(Id_table const*,bool){
-	std::set<std::string> r;
-	#define X(A,B,C) r|=string{""#A};
-	TABLES(X)
-	#undef X
+std::set<std::string> const& options(Id_table const*,bool){
+	static std::set<std::string> r;
+	if(r.empty()){
+		#define X(A,B,C) r|=string{""#A};
+		TABLES(X)
+		#undef X
+	}
 	return r;
 }
 

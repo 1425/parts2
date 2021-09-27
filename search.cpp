@@ -41,12 +41,12 @@ Latest latest(Id_table table){
 	return Latest{table,{},{}};
 }
 
-Id_table table(Row_id a){
+/*Id_table table(Row_id a){
 	#define X(A,B,C) if(holds_alternative<B##_id>(a)) return Id_table{""#A};
 	TABLES(X)
 	#undef X
 	assert(0);
-}
+}*/
 
 int stoi(Row_id);
 

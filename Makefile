@@ -1,4 +1,4 @@
-CXXFLAGS += -Wall -Wextra -Werror -std=c++2a -Os
+CXXFLAGS += -Wall -Wextra -Werror -std=c++2a -g
 CXX = g++-10
 LDFLAGS=`mariadb_config --cflags --libs` -lmariadbclient -lcgicc
 INSTALL_DIR ?= /home/eric/code/cgi-bin/

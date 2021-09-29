@@ -22,6 +22,7 @@ Dup dup;*/
 
 void run_cmd(DB db,std::string const& cmd){
 	//dup.add(cmd);
+	assert(db);
 	auto q=mysql_query(db,cmd.c_str());
 	if(q){
 		std::cout<<"Mysql fail:"<<mysql_error(db)<<"\n";

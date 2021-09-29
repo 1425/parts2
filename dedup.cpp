@@ -161,6 +161,8 @@ void check_dup(DB db,Id_table const& dedup_table,std::vector<std::string> const&
 					for(auto edit_row:cast(edit_table,q)){
 						cout<<"Edit:"<<edit_row<<": "<<column_name<<"="<<key_keeping<<"\n";
 						edit_single(db,edit_row,column_name,as_int(key_keeping));
+						reconnect(db);
+						return check_dup(db,dedup_table,items);
 					}
 				}
 			}

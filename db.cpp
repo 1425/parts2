@@ -373,6 +373,17 @@ DB_connection::~DB_connection(){
 	mysql_close(db);
 }
 
+void reconnect(DB db){
+	mysql_close(db);
+	auto x=connect_db();
+	db=x.db;
+	x.db=NULL;
+}
+
+bool operator&(std::set<std::string> const& a,const char *s){
+	return a.contains(s);
+}
+
 DB_connection connect_db(string const& auth_filename){
 	namespace pt=boost::property_tree;
 	pt::ptree root;
@@ -418,10 +429,21 @@ DB_connection connect_db(string const& auth_filename){
 		"CREATE TEMPORARY TABLE "#A "_current SELECT * FROM "#A"_info WHERE valid AND id IN (SELECT max(id) FROM "#A"_info GROUP BY main)"\
 		" PRIMARY KEY main"\
 	);*/
-	#define X(A,B,C) run_cmd(\
-		db.db,\
-		"CREATE TEMPORARY TABLE "#A "_current SELECT * FROM "#A"_info WHERE valid AND id IN (SELECT max(id) FROM "#A"_info GROUP BY main)"\
-	); run_cmd(db.db,"ALTER TABLE "#A"_current ADD CONSTRAINT f PRIMARY KEY (main)");
+
+	auto suitable=[db](string table)->bool{
+		if(!show_tables(db.db).contains(table+"_info")) return 0;
+		auto r=read(db.db,table+"_info");
+		auto f=filter([](auto x){ return x.first=="main"; },r);
+		return f.size()!=0;
+	};
+
+	#define X(A,B,C) if(suitable(""#A)){\
+		run_cmd(\
+			db.db,\
+			"CREATE TEMPORARY TABLE "#A "_current SELECT * FROM "#A"_info WHERE valid AND id IN (SELECT max(id) FROM "#A"_info GROUP BY main)"\
+		);\
+		run_cmd(db.db,"ALTER TABLE "#A"_current ADD CONSTRAINT f PRIMARY KEY (main)"); \
+	}
 	TABLES(X)
 	#undef X
 

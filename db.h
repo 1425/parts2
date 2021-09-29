@@ -720,6 +720,8 @@ struct DB_connection{
 
 DB_connection connect_db();
 DB_connection connect_db(std::string const&);
+void reconnect(DB);
+
 void populate(DB);
 void drop_test_data();
 

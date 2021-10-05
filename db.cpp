@@ -373,15 +373,38 @@ DB_connection::~DB_connection(){
 	mysql_close(db);
 }
 
-void reconnect(DB db){
-	mysql_close(db);
-	auto x=connect_db();
-	db=x.db;
-	x.db=NULL;
-}
-
 bool operator&(std::set<std::string> const& a,const char *s){
 	return a.contains(s);
+}
+
+void setup_current(DB db){
+	auto suitable=[&](string table)->bool{
+		if(!show_tables(db).contains(table+"_info")) return 0;
+		auto r=read(db,table+"_info");
+		auto f=filter([](auto x){ return x.first=="main"; },r);
+		return f.size()!=0;
+	};
+
+	#define X(A,B,C) if(suitable(""#A)){\
+		run_cmd(db,"DROP TABLE IF EXISTS "#A "_current");\
+		run_cmd(\
+			db,\
+			"CREATE TEMPORARY TABLE "#A "_current SELECT * FROM "#A"_info WHERE valid AND id IN (SELECT max(id) FROM "#A"_info GROUP BY main)"\
+		);\
+		run_cmd(db,"ALTER TABLE "#A"_current ADD CONSTRAINT f PRIMARY KEY (main)"); \
+	}
+	TABLES(X)
+	#undef X
+}
+
+void reconnect(DB &db){
+	cout<<"Start reconnect\n";
+	/*mysql_close(db);
+	auto x=connect_db();
+	db=x.db;
+	x.db=NULL;*/
+	setup_current(db);
+	cout<<"End reconnect\n";
 }
 
 DB_connection connect_db(string const& auth_filename){
@@ -411,41 +434,7 @@ DB_connection connect_db(string const& auth_filename){
 		throw "Could not connect to database";
 	}
 
-	//eventually, this should go somewhere else so doesn't do this every time
-	//and also need to have it at adjustable timeframe
-	//and even if needed to retain it here would be able to drop some of the columns like 'valid'
-	//#define X(A,B,C) run_cmd(db.db,"CREATE TEMPORARY TABLE "#A "_current SELECT * FROM "#A"_info WHERE valid AND id IN (SELECT max(id) FROM "#A"_info GROUP BY main)");
-
-	/*auto f=[&](string name){
-		run_cmd(
-			db.db,
-			"CREATE TEMPORARY TABLE "+name+"_current SELECT * FROM "+name+"_info WHERE valid AND id IN (SELECT max(id) FROM "+name+"_info GROUP BY main)"
-			" PRIMARY KEY (main)"
-		);
-	};*/
-
-	/*#define X(A,B,C) run_cmd(\
-		db.db,\
-		"CREATE TEMPORARY TABLE "#A "_current SELECT * FROM "#A"_info WHERE valid AND id IN (SELECT max(id) FROM "#A"_info GROUP BY main)"\
-		" PRIMARY KEY main"\
-	);*/
-
-	auto suitable=[&](string table)->bool{
-		if(!show_tables(db.db).contains(table+"_info")) return 0;
-		auto r=read(db.db,table+"_info");
-		auto f=filter([](auto x){ return x.first=="main"; },r);
-		return f.size()!=0;
-	};
-
-	#define X(A,B,C) if(suitable(""#A)){\
-		run_cmd(\
-			db.db,\
-			"CREATE TEMPORARY TABLE "#A "_current SELECT * FROM "#A"_info WHERE valid AND id IN (SELECT max(id) FROM "#A"_info GROUP BY main)"\
-		);\
-		run_cmd(db.db,"ALTER TABLE "#A"_current ADD CONSTRAINT f PRIMARY KEY (main)"); \
-	}
-	TABLES(X)
-	#undef X
+	setup_current(db.db);
 
 	return db;
 }

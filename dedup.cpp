@@ -44,8 +44,6 @@ vector<pair<Id_table,vector<Column_name>>> referred_by(Id_table const& target){
 }
 
 Row_id cast(Id_table const& table,int id){
-	(void)table;
-	(void)id;
 	#define X(A,B,C) if(table==""#A) return Row_id{B##_id{id}};
 	TABLES(X)
 	#undef X

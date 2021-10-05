@@ -563,7 +563,7 @@ Part_number_local::Part_number_local(std::string const& a){
 	auto left=a.substr(11,200);
 	Year y(stoi(left));
 	if(y>now().year){
-		throw "Invalid year suffix";
+		throw "Invalid year suffix:"+as_string(y)+" ("+a+")";
 	}
 	year=y;
 }

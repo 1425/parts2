@@ -430,7 +430,7 @@ DB_connection connect_db(string const& auth_filename){
 		" PRIMARY KEY main"\
 	);*/
 
-	auto suitable=[db](string table)->bool{
+	auto suitable=[&](string table)->bool{
 		if(!show_tables(db.db).contains(table+"_info")) return 0;
 		auto r=read(db.db,table+"_info");
 		auto f=filter([](auto x){ return x.first=="main"; },r);
